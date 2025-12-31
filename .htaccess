@@ -1,0 +1,13 @@
+RewriteEngine On
+RewriteBase /
+
+# 정적 파일 예외 처리
+RewriteCond %{REQUEST_URI} ^/uploads/ [NC]
+RewriteRule .* - [L]
+
+RewriteCond %{REQUEST_URI} \.(js|css|png|jpg|jpeg|gif|ico|svg)$ [NC]
+RewriteRule .* - [L]
+
+# 일반 페이지 리라이트
+RewriteRule ^([^/]+)/([^/]+)$ index.php?context1=$1&context2=$2 [L,QSA]
+RewriteRule ^([^/]+)/([^/]+)/([^/]+)$ index.php?context1=$1&context2=$2&action=$3 [L,QSA]

@@ -1,0 +1,23 @@
+# --- [보안] 설정 및 비밀번호 파일 ---
+# DB 접속 정보가 포함된 설정 파일 (예: config.php, db_connect.php)
+# 이 파일들은 서버마다 정보가 다르므로 제외하고, 대신 샘플 파일을 올립니다.
+db.php
+config.php
+.env
+
+# --- [데이터] 사용자 업로드 파일 ---
+# 앨범 서비스에서 가장 중요한 부분입니다.
+# 실제 아기 사진/영상은 서버에만 저장하고 깃에는 올리지 않습니다.
+uploads/
+data/
+temp/
+
+# 만약 uploads 폴더 구조만 유지하고 싶다면 아래 주석을 해제하세요.
+# !uploads/.gitkeep
+
+# --- [운영] 로그 및 임시 파일 ---
+# *.log
+# errors.log
+# access.log
+# .DS_Store
+# Thumbs.db
