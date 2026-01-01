@@ -36,6 +36,15 @@ $photoMap = getPhotoMap($result['photos']);
 $firstDay = date('w', strtotime("$year-$month-01"));
 $daysInMonth = date('t', strtotime("$year-$month-01"));
 ?>
+<!-- Intro -->
+<div id="intro-layer">
+    <div class="intro-content">
+        <h1 class="intro-text">MY BABY</h1>
+        <div class="intro-line"></div>
+    </div>
+</div>
+<!-- Main Content -->
+<div id="main-content">
 <div class="user-top-bar border-bottom">
     <div class="user-info dropdown">
         <img src="https://i.namu.wiki/i/7O1crMPIK4ppy2n9BUtvQXsiS0UlYrbsluS91uODKRzt0GLyrUa7UtBGCfmUHuqfQjqUfHDsW3fZ4nbx32Z3lA.webp" class="user-avatar" alt="Avatar">
@@ -170,8 +179,34 @@ $daysInMonth = date('t', strtotime("$year-$month-01"));
         </div>
     </div>
 </div>
-
+</div>
 <script>
+  $(document).ready(function() {
+    // 1. 세션 저장소에서 인트로 확인 여부 체크
+    const isIntroShown = sessionStorage.getItem('intro_shown');
+    if (!isIntroShown) {
+        // --- 처음 들어온 경우: 인트로 실행 ---
+        
+        // 1.5초(또는 애니메이션 시간) 후에 인트로 레이어 제거
+        setTimeout(function() {
+            $('#intro-layer').addClass('fade-out');
+            
+            setTimeout(function() {
+                $('#intro-layer').hide();
+                $('#main-content').fadeIn(1000);
+                
+                // 2. 인트로를 봤다는 기록을 저장
+                sessionStorage.setItem('intro_shown', 'true');
+            }, 1200);
+            
+        }, 2500); // 인트로 문구를 보여줄 시간
+
+    } else {
+        // --- 이미 인트로를 본 경우: 바로 메인 표시 ---
+        $('#intro-layer').hide(); // 인트로 숨김
+        $('#main-content').show(); // 메인 즉시 표시
+    }
+  });
 /**
  * 상세화면 날짜 이동 스와이프 기능
  */
