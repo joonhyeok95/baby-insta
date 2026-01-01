@@ -29,7 +29,7 @@ $next_y = date('Y', $next_ts);
 $next_m = date('n', $next_ts);
 
 // 3. API 또는 JSON 파일에서 해당 년/월 데이터 가져오기 (필터링 적용)
-$result = fetchAlbumData($year, $month); 
+$result = fetchCalendarData($year, $month); 
 $photoMap = getPhotoMap($result['photos']);
 
 // 4. 달력 그리드 계산
