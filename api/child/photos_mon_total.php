@@ -2,7 +2,10 @@
 // header('Content-Type: application/json; charset=utf-8');
 // header('Access-Control-Allow-Origin: *');// 3. 파라미터 받기 (년/월 필터링용)
 $year  = isset($_GET['y']) ?  $_GET['y'] : date('Y');
-$month = isset($_GET['m']) ? $_GET['m'] : date('m');
+$month = isset($_GET['m']) ? $_GET['m'] : date('n');
+// 한 자리 숫자일 경우 앞에 '0'을 붙여 2자리로 만듭니다.
+$month = str_pad($month, 2, '0', STR_PAD_LEFT);
+
 $user = "USER_001";
 
 // 4. SQL 쿼리 작성 

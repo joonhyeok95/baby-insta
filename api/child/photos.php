@@ -11,7 +11,8 @@ $sql = "SELECT
             USER_ID as user_id, 
             FILE_NAME_ORG as title, 
             FILE_PATH as image_url, 
-            TAKEN_AT as taken_at 
+            TAKEN_AT as taken_at,
+            IS_REP as is_rep
         FROM tb_file 
         WHERE YEAR(TAKEN_AT) = '$year' AND MONTH(TAKEN_AT) = '$month'
         ORDER BY TAKEN_AT DESC, CREATE_DATE DESC";

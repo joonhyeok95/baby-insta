@@ -38,7 +38,7 @@ if ($currentDate < $birthDate) {
 ?>
 
 <div class="detail-header">
-    <i class="bi bi-chevron-left fs-4" onclick="document.location.href='/'" style="cursor:pointer;"></i>
+    <i class="bi bi-chevron-left fs-4" onclick="history.back(-1)" style="cursor:pointer;"></i>
     <div class="date-selector">
         <i class="bi bi-caret-left-fill me-2" onclick="document.location.href='/album/detail?date=<?php echo $prevDate; ?>'"></i>
         <?= $displayDate ?>

@@ -52,6 +52,11 @@ foreach ($photos as $photo) {
     // 아직 영상 썸네일을 못 찾았고, 현재 파일이 영상이라면
     if (empty($firstVidUrl) && in_array($extension, $vidExts)) {
         $firstVidUrl = $photo['image_url'];
+        $fileName = basename($firstVidUrl);
+        $thumbName = str_replace('resized_', 'thumb_', $fileName);
+        $thumbName = pathinfo($thumbName, PATHINFO_FILENAME) . '.jpg';
+        $dir = dirname($firstVidUrl);
+        $firstVidThumbUrl = $dir . DIRECTORY_SEPARATOR . $thumbName;
     }
 
     // 둘 다 찾았으면 루프 종료
@@ -109,7 +114,7 @@ $totalCount = fetchAlbumDataCount($year, $month);
     <div class="stat-card">
         <div class="stat-title">영상</div>
         <div class="stat-count"><?= $totalCount['result']['video_count']; ?></div>
-        <img src="<?= $firstVidUrl ?? '' ?>" onerror="this.onerror=null; this.src='/img/no_img.png';" class="stat-img">
+        <img src="<?= $firstVidThumbUrl ?? '' ?>" onerror="this.onerror=null; this.src='/img/no_img.png';" class="stat-img">
     </div>
     <div class="stat-card">
         <div class="stat-title">TDD1</div>
@@ -144,6 +149,12 @@ $totalCount = fetchAlbumDataCount($year, $month);
             // 파일 확장자 추출 (소문자 변환)
             $extension = strtolower(pathinfo($fileUrl, PATHINFO_EXTENSION));
             $isVideo = in_array($extension, ['mp4', 'webm', 'ogg', 'mov']);
+            // 비디오 썸네일 경로 추출
+            $fileName = basename($fileUrl);
+            $dir = dirname($fileUrl);
+            $thumbName = str_replace('resized_', 'thumb_', $fileName);
+            $thumbName = pathinfo($thumbName, PATHINFO_FILENAME) . '.jpg';
+            $videoThumbUrl = $dir . DIRECTORY_SEPARATOR . $thumbName;
 
             // 3. 이전 사진과 날짜가 다를 경우에만 헤더 출력
             if ($currentDate !== $lastDate): 
@@ -168,19 +179,23 @@ $totalCount = fetchAlbumDataCount($year, $month);
             endif; 
             ?>
 
-            <div class="photo-item" onclick="location.href='detail.php?date=<?= $currentDate ?>'">
+            <div class="photo-item">
                 <?php if ($isVideo): ?>
-                    <video class="album-media" autoplay muted loop playsinline>
-                        <source src="<?= $fileUrl ?>" type="video/<?= $extension === 'mov' ? 'mp4' : $extension ?>">
-                        브라우저가 비디오 태그를 지원하지 않습니다.
-                    </video>
+                    <img src="<?= $videoThumbUrl ?>" alt="썸네일"  onclick="location.href='detail?date=<?= $currentDate ?>'">
+                    <!-- <div class="video-container" data-src="<?= $fileUrl ?>"></div> -->
                     <div class="video-badge"><i class="bi bi-play-fill"></i></div>
                 <?php else: ?>
-                    <img src="<?= $photo['image_url'] ?>" alt="baby">
+                    <img src="<?= $photo['image_url'] ?>" alt="baby"  onclick="location.href='detail?date=<?= $currentDate ?>'">
                     <?php if(strpos($photo['image_url'], '.mp4') !== false): ?>
                         <i class="bi bi-play-circle-fill position-absolute top-50 start-50 translate-middle text-white fs-3"></i>
                     <?php endif; ?>
                 <?php endif; ?>
+                <!-- <div class="rep-badge <?= ($photo['is_rep'] == 'Y') ? '' : 'd-none' ?>">
+                    <i class="bi bi-star-fill text-warning"></i>
+                </div> -->
+                <div class="rep-star-btn" data-id="<?= $photo['id'] ?>">
+                    <i class="bi <?= ($photo['is_rep'] == 'Y') ? 'bi-star-fill text-warning' : 'bi-star text-white' ?>"></i>
+                </div>
             </div>
 
         <?php endforeach; ?>
@@ -205,6 +220,34 @@ $totalCount = fetchAlbumDataCount($year, $month);
 </div>
 
 <?php include $_SERVER['DOCUMENT_ROOT'].'/pages/album/upload_modal.php'; ?>
+
+<script>
+    $(document).on('click', '.rep-star-btn', function(e) {
+        const fileId = $(this).data('id');
+        const btn = this;
+        if (!confirm('이 사진을 해당 날짜의 대표 사진으로 설정하시겠습니까?')) return;
+
+        // 2. API 호출
+        $.ajax({
+            url: '/api/child/rep',
+            method: 'POST',
+            data: { file_id: fileId },
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success') {
+                    alert('대표 사진이 변경되었습니다.');
+                    // 화면 새로고침 없이 아이콘 변경을 원할 경우:
+                    location.reload(); 
+                } else {
+                    alert('에러: ' + res.message);
+                }
+            },
+            error: function() {
+                alert('서버 통신 중 오류가 발생했습니다.');
+            }
+        });
+    });
+</script>
 
 <nav class="bottom-nav">
     <a href="/" class="nav-link"><i class="bi bi-calendar3"></i>캘린더</a>

@@ -57,7 +57,9 @@ for ($i = 0; $i < $count; $i++) {
       $result = compressVideo($fileTmpPath, $destPath);
       if ($result['success']) {
           // 썸네일도 생성 // -ss 00:00:01 은 1초 지점
-          $thumbCmd = "ffmpeg -i \"$fileTmpPath\" -ss 00:00:01 -vframes 1 -s 480x270 \"$thumbDestPath\" 2>&1";
+          // -2 를 사용하면 원본 비율을 유지하면서 다른 한쪽 길이에 맞춰 짝수 해상도를 생성합니다.
+          $filter = "scale='if(gt(iw,ih),480,-2)':'if(gt(iw,ih),-2,480)'";
+          $thumbCmd = "ffmpeg -i \"$fileTmpPath\" -ss 00:00:01 -vframes 1 -vf \"$filter\" \"$thumbDestPath\" 2>&1";
           exec($thumbCmd);
       } else {
           // 실패 시 로그 확인
