@@ -31,10 +31,35 @@ $selectedMonth = isset($_GET['m']) ? $_GET['m'] : $monthList[0]['month'];
 ///////////////////////////////////////////////////////////////////////
 $year = isset($_GET['y']) ? (int)$_GET['y'] : date('Y');
 $month = isset($_GET['m']) ? (int)$_GET['m'] : date('n');
-// API 데이터 호출
+// 해당 데이터 호출
 $result = fetchAlbumData($year, $month);
 $photos = $result['photos'];
 
+$firstImgUrl = ''; // 첫 번째 사진 URL
+$firstVidUrl = ''; // 첫 번째 영상 URL
+// 이미지/영상 확장자 정의
+$imgExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+$vidExts = ['mp4', 'mov', 'avi', 'webm'];
+
+foreach ($photos as $photo) {
+    $extension = strtolower(pathinfo($photo['title'], PATHINFO_EXTENSION));
+    
+    // 아직 사진 썸네일을 못 찾았고, 현재 파일이 사진이라면
+    if (empty($firstImgUrl) && in_array($extension, $imgExts)) {
+        $firstImgUrl = $photo['image_url'];
+    }
+    
+    // 아직 영상 썸네일을 못 찾았고, 현재 파일이 영상이라면
+    if (empty($firstVidUrl) && in_array($extension, $vidExts)) {
+        $firstVidUrl = $photo['image_url'];
+    }
+
+    // 둘 다 찾았으면 루프 종료
+    if (!empty($firstImgUrl) && !empty($firstVidUrl)) break;
+}
+
+// 사진/영상 갯수 추출 API
+$totalCount = fetchAlbumDataCount($year, $month);
 ?>
 <div class="d-flex align-items-center justify-content-between p-3">
     <div class="user-info dropdown">
@@ -78,16 +103,20 @@ $photos = $result['photos'];
 <div class="stat-scroll">
     <div class="stat-card">
         <div class="stat-title">사진</div>
-        <div class="stat-count"><?= count($photos) ?></div>
-        <img src="<?= $photos[0]['image_url'] ?? '' ?>" onerror="this.onerror=null; this.src='/img/no_img.png';" class="stat-img">
+        <div class="stat-count"><?= $totalCount['result']['image_count']; ?></div>
+        <img src="<?= $firstImgUrl ?? '' ?>" onerror="this.onerror=null; this.src='/img/no_img.png';" class="stat-img">
     </div>
     <div class="stat-card">
         <div class="stat-title">영상</div>
-        <div class="stat-count">0</div>
-        <img src="<?= $photos[0]['image_url'] ?? '' ?>" onerror="this.onerror=null; this.src='/img/no_img.png';" class="stat-img">
+        <div class="stat-count"><?= $totalCount['result']['video_count']; ?></div>
+        <img src="<?= $firstVidUrl ?? '' ?>" onerror="this.onerror=null; this.src='/img/no_img.png';" class="stat-img">
     </div>
     <div class="stat-card">
-        <div class="stat-title">태그</div>
+        <div class="stat-title">TDD1</div>
+        <div class="stat-count">0</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">TDD2</div>
         <div class="stat-count">0</div>
     </div>
 </div>
