@@ -1,4 +1,6 @@
 <?php
+ob_start();
+
 $uploadDir = $_SERVER['DOCUMENT_ROOT']. '/uploads/'; // 저장할 서버 경로
 if (!is_dir($uploadDir)) {
   mkdir($uploadDir, 0755, true);
@@ -29,22 +31,12 @@ for ($i = 0; $i < $count; $i++) {
     $fileTmpPath = $files['tmp_name'][$i];
     $fileName = basename($files['name'][$i]);
     $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-    // $allowedExts = ['jpg', 'jpeg', 'png', 'gif','mov','mp4', 'webm', 'ogg'];
-    // if (!in_array($fileExt, $allowedExts)) {
-    //   echo json_encode(['status' => 'error', 'message' => '허용되지 않는 파일 형식입니다.'], JSON_UNESCAPED_UNICODE);
-    //   exit;
-    // }
     // 고유 파일명 생성
-    $newFileName = uniqid('', true) . '.' . $fileExt;
-    $destPath = $uploadDir . $newFileName;
-    // 웹에서 접근 가능한 경로로 변경 필요
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-    $domain = $_SERVER['HTTP_HOST'];
-    $image_url = $protocol . $domain . "/uploads/". $newFileName;
-    $file_size = $files['size'][$i];
-    $file_id  = uniqid('FILE_');
+    $uniq = uniqid('', true);
 
     if (in_array($fileExt, ['jpg', 'jpeg', 'png', 'gif'])) {
+      $newFileName = uniqid('', true) . '.' . $fileExt;
+      $destPath = $uploadDir . $newFileName;
       $resizedStatus = resizeImage($fileTmpPath, $destPath, 1200, 80); // 압축
       if (!$resizedStatus) {
         // 리사이즈 실패 시 원본이라도 저장
@@ -55,15 +47,37 @@ for ($i = 0; $i < $count; $i++) {
         }
       }
     } else {
-      // 영상 업로드
-      if (move_uploaded_file($fileTmpPath, to: $destPath)) {
-
+      // 영상 업로드, 화질축소->썸네일추출 ffmpeg 라이브러리
+      // 영상파일명 재생성
+      $newFileName = 'resized_'.$uniq . '.mp4';
+      $newThumbnailFileName = 'thumb_'. $uniq . '.jpg';
+      $destPath = $uploadDir . $newFileName;
+      $thumbDestPath = $uploadDir . $newThumbnailFileName;
+      // 영상 압축 실행
+      $result = compressVideo($fileTmpPath, $destPath);
+      if ($result['success']) {
+          // 썸네일도 생성 // -ss 00:00:01 은 1초 지점
+          $thumbCmd = "ffmpeg -i \"$fileTmpPath\" -ss 00:00:01 -vframes 1 -s 480x270 \"$thumbDestPath\" 2>&1";
+          exec($thumbCmd);
       } else {
-        echo json_encode(['status' => 'error', 'message' => 'Movie File Upload Error!!!'], JSON_UNESCAPED_UNICODE);
-        exit;
-      }
+          // 실패 시 로그 확인
+          print_r($result['msg']);
+      }      
+      // 원본파일 그대로 저장 시 사용
+      // if (move_uploaded_file($fileTmpPath, to: $destPath)) {
+      // } else {
+      //   echo json_encode(['status' => 'error', 'message' => 'Movie File Upload Error!!!'], JSON_UNESCAPED_UNICODE);
+      //   exit;
+      // }
     }
   }
+  // 웹에서 접근 가능한 경로로 변경 필요
+  $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+  $domain = $_SERVER['HTTP_HOST'];
+  $image_url = $protocol . $domain . "/uploads/". $newFileName;
+  $file_size = $files['size'][$i];
+  $file_id  = uniqid('FILE_');
+
   $sql = "INSERT INTO tb_file (
               FILE_ID, FILE_NAME, FILE_NAME_ORG, FILE_PATH, 
               TAKEN_AT, FILE_SIZE, CHILD_ID, USER_ID, 
@@ -88,6 +102,7 @@ if ($success) {
     $n_dt = new DateTime($taken_at);
     $redirectUrl = "/album/list?y=".$n_dt->format('Y')."&m=".$n_dt->format('n');
     header("Location: $redirectUrl");
+    exit;
 } else {
     echo json_encode(['status' => 'error', 'message' => $mysqli->error], JSON_UNESCAPED_UNICODE);
 }
